@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local TTS CLI — kokoro-onnx → PCM → pw-cat (PipeWire)."""
+"""Local TTS CLI — kokoro-onnx -> PCM -> system audio playback."""
 
 import argparse
 import asyncio
@@ -84,6 +84,14 @@ def chunk_text(text: str) -> list[str]:
     return chunks or [text]
 
 
+def build_player_command(player_cmd: str, sample_rate: int) -> list[str]:
+    """Build the playback command for the selected audio backend."""
+    base_args = ["--raw", "--rate", str(sample_rate), "--channels", "1"]
+    if player_cmd == "pw-cat":
+        return [player_cmd, "--playback", *base_args, "--format", "s16", "-"]
+    return [player_cmd, "--playback", *base_args, "--format", "s16le"]
+
+
 def _log(msg: str) -> None:
     print(f"[tts] {msg}", file=sys.stderr)
 
@@ -92,7 +100,7 @@ async def speak(
     text: str, voice: str, speed: float, lang: str,
     threads: int, no_spin: bool, stats: bool,
 ) -> None:
-    """Stream TTS audio paragraph-by-paragraph to PipeWire."""
+    """Stream TTS audio paragraph-by-paragraph to the available audio backend."""
     import numpy as np
     import onnxruntime as ort
     from kokoro_onnx import Kokoro
@@ -141,13 +149,7 @@ async def speak(
 
                 if proc is None:
                     proc = subprocess.Popen(
-                        [
-                            player_cmd, "--playback", "--raw",
-                            "--rate", str(sample_rate),
-                            "--channels", "1",
-                            "--format", "s16",
-                            "-",
-                        ],
+                        build_player_command(player_cmd, sample_rate),
                         stdin=subprocess.PIPE,
                     )
                 pcm = np.clip(samples * 32767, -32768, 32767).astype(np.int16).tobytes()
@@ -183,7 +185,7 @@ def main() -> None:
     default_no_spin = os.environ.get("TTS_NO_SPIN", "") == "1"
 
     parser = argparse.ArgumentParser(
-        description="Local TTS via kokoro-onnx → PipeWire"
+        description="Local TTS via kokoro-onnx with system audio playback"
     )
     parser.add_argument("text", nargs="?", help="Text string or path to .txt/.md file")
     parser.add_argument("--voice", default="af_heart", help="Voice name (default: af_heart)")
