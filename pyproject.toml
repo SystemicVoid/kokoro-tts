@@ -1,0 +1,13 @@
+[project]
+name = "kokoro-tts"
+version = "0.1.0"
+description = "Local TTS CLI using kokoro-onnx with system audio playback"
+requires-python = ">=3.12"
+dependencies = [
+    "kokoro-onnx>=0.5.0",
+    "numpy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
