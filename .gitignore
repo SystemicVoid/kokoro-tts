@@ -1,0 +1,10 @@
+__pycache__/
+tests/__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+dist/
+*.pyc
+
+stats-local-inference.txt
+test-text.md
