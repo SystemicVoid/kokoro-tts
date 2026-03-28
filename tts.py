@@ -16,7 +16,9 @@ from pathlib import Path
 from typing import Literal
 
 MODEL_DIR = Path.home() / ".local" / "share" / "kokoro-tts"
-BASE_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+BASE_URL = (
+    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+)
 MODEL_FILE = "kokoro-v1.0.int8.onnx"
 VOICES_FILE = "voices-v1.0.bin"
 
@@ -92,7 +94,9 @@ def _parse_segments(text: str) -> list[Segment]:
 
         if stripped.startswith("|") and stripped.endswith("|"):
             flush_paragraph()
-            cells = [_clean_inline_text(cell) for cell in stripped.strip("|").split("|")]
+            cells = [
+                _clean_inline_text(cell) for cell in stripped.strip("|").split("|")
+            ]
             cells = [cell for cell in cells if cell]
             if cells:
                 segments.append(Segment("table", ", ".join(cells)))
@@ -110,7 +114,11 @@ def _merge_short_headings(segments: list[Segment]) -> list[Segment]:
 
     for segment in segments:
         if segment.kind == "heading" and len(segment.text) <= 30:
-            pending_heading = segment.text if pending_heading is None else f"{pending_heading}. {segment.text}"
+            pending_heading = (
+                segment.text
+                if pending_heading is None
+                else f"{pending_heading}. {segment.text}"
+            )
             continue
 
         if pending_heading and segment.kind != "heading":
@@ -269,7 +277,10 @@ def find_player() -> str:
     for cmd in ("pw-cat", "pacat"):
         if shutil.which(cmd):
             return cmd
-    print("Error: neither pw-cat nor pacat found. Install PipeWire or PulseAudio.", file=sys.stderr)
+    print(
+        "Error: neither pw-cat nor pacat found. Install PipeWire or PulseAudio.",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
@@ -362,14 +373,26 @@ async def speak(
                             build_player_command(player_cmd, sample_rate),
                             stdin=subprocess.PIPE,
                         )
-                    pcm = np.clip(samples * 32767, -32768, 32767).astype(np.int16).tobytes()
+                    pcm = (
+                        np.clip(samples * 32767, -32768, 32767)
+                        .astype(np.int16)
+                        .tobytes()
+                    )
                     proc.stdin.write(pcm)
 
                 chunk_last_output_at = time.perf_counter()
 
-            wait_s = None if first_chunk_output_at is None else first_chunk_output_at - chunk_start
+            wait_s = (
+                None
+                if first_chunk_output_at is None
+                else first_chunk_output_at - chunk_start
+            )
             gap_s = None
-            if chunk_metrics and chunk_metrics[-1]["last_output_at_s"] is not None and first_chunk_output_at is not None:
+            if (
+                chunk_metrics
+                and chunk_metrics[-1]["last_output_at_s"] is not None
+                and first_chunk_output_at is not None
+            ):
                 gap_s = first_chunk_output_at - chunk_metrics[-1]["last_output_at_s"]
 
             total_audio_dur += audio_dur
@@ -393,7 +416,7 @@ async def speak(
             if stats and wait_s is not None:
                 gap_label = "n/a" if gap_s is None else f"{gap_s:+.2f}s"
                 _log(
-                    f"#{i + 1} \"{preview}\"\n"
+                    f'#{i + 1} "{preview}"\n'
                     f"      {len(chunk):>4}ch {chunk_metric['sentences_estimate']}sn | "
                     f"wait {wait_s:.2f}s -> {audio_dur:.1f}s audio | gap {gap_label}"
                 )
@@ -444,9 +467,15 @@ def main() -> None:
         description="Local TTS via kokoro-onnx with system audio playback"
     )
     parser.add_argument("text", nargs="?", help="Text string or path to .txt/.md file")
-    parser.add_argument("--voice", default="af_heart", help="Voice name (default: af_heart)")
-    parser.add_argument("--speed", type=float, default=1.0, help="Speech speed (default: 1.0)")
-    parser.add_argument("--lang", default="en-us", help="Language code (default: en-us)")
+    parser.add_argument(
+        "--voice", default="af_heart", help="Voice name (default: af_heart)"
+    )
+    parser.add_argument(
+        "--speed", type=float, default=1.0, help="Speech speed (default: 1.0)"
+    )
+    parser.add_argument(
+        "--lang", default="en-us", help="Language code (default: en-us)"
+    )
     parser.add_argument(
         "--threads",
         type=int,
@@ -466,7 +495,8 @@ def main() -> None:
         help="Chunking strategy: full document, adaptive sentences, or paragraphs",
     )
     parser.add_argument(
-        "--stats", action="store_true",
+        "--stats",
+        action="store_true",
         help="Print timing stats to stderr",
     )
     parser.add_argument(
@@ -474,7 +504,8 @@ def main() -> None:
         help="Write run metrics as JSON to the given path",
     )
     parser.add_argument(
-        "--dry-run", action="store_true",
+        "--dry-run",
+        action="store_true",
         help="Run synthesis without playing audio (for benchmarking with --stats)",
     )
     args = parser.parse_args()
