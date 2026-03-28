@@ -139,3 +139,11 @@ def test_speak_paragraph_mode_uses_multiple_stream_calls(monkeypatch) -> None:
         "Second paragraph.",
     ]
     assert metrics["chunk_count"] == 2
+
+
+def test_parser_defaults_to_sentences_mode() -> None:
+    parser = tts.build_parser()
+
+    args = parser.parse_args(["hello world"])
+
+    assert args.chunk_mode == "sentences"

@@ -459,7 +459,7 @@ async def speak(
     return metrics
 
 
-def main() -> None:
+def build_parser() -> argparse.ArgumentParser:
     default_threads = int(os.environ.get("TTS_THREADS", "8"))
     default_no_spin = os.environ.get("TTS_NO_SPIN", "") == "1"
 
@@ -491,8 +491,8 @@ def main() -> None:
     parser.add_argument(
         "--chunk-mode",
         choices=("document", "sentences", "paragraphs"),
-        default="document",
-        help="Chunking strategy: full document, adaptive sentences, or paragraphs",
+        default="sentences",
+        help="Chunking strategy (default: sentences): full document, adaptive sentences, or paragraphs",
     )
     parser.add_argument(
         "--stats",
@@ -508,6 +508,11 @@ def main() -> None:
         action="store_true",
         help="Run synthesis without playing audio (for benchmarking with --stats)",
     )
+    return parser
+
+
+def main() -> None:
+    parser = build_parser()
     args = parser.parse_args()
 
     text = get_text(args.text)
